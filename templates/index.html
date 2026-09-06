@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmSathi AI – Smart Farming with Generative AI</title>
+    <meta name="description"
+        content="Precision agriculture powered by computer vision and real-time soil data to safeguard crops and cattle.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- ═══════════════════════════════════════════
+         SITE HEADER – FarmSathi AI name only
+    ════════════════════════════════════════════ -->
+    <header class="site-header">
+        <a class="site-logo" href="#">
+            <span>🌿</span>
+            FarmSathi <span class="logo-ai">AI</span>
+        </a>
+    </header>
+
+    <!-- ═══════════════════════════════════════════
+         FEATURE SHOWCASE (2-COL)
+    ════════════════════════════════════════════ -->
+    <section class="showcase" id="features">
+        <div class="showcase-inner">
+
+            <!-- Left: Feature accordion cards -->
+            <div class="showcase-left">
+                <p class="showcase-eyebrow">Core AI Modules</p>
+                <h2 class="showcase-title">Four Powerful<br>AI Engines</h2>
+
+                <div class="feature-card active-feature" id="fc-crop" onclick="selectFeature('crop')">
+                    <div class="fc-icon fc-icon-green">🌱</div>
+                    <div class="fc-body">
+                        <h3>Crop Recommendation System</h3>
+                        <p>Intelligent N-P-K and climate-based crop matching to maximize seasonal yield with 99%
+                            precision.</p>
+                        <a class="fc-link" href="#app" onclick="switchTab('crop')">Try Crop AI →</a>
+                    </div>
+                </div>
+
+                <div class="feature-card" id="fc-disease" onclick="selectFeature('disease')">
+                    <div class="fc-icon fc-icon-blue">🔬</div>
+                    <div class="fc-body">
+                        <h3>Plant Disease Detection</h3>
+                        <p>Instant computer-vision leaf diagnosis identifying rust, blight, and fungal strains in
+                            seconds.</p>
+                        <a class="fc-link" href="#app" onclick="switchTab('disease')">Try Plant AI →</a>
+                    </div>
+                </div>
+
+                <div class="feature-card" id="fc-cow" onclick="selectFeature('cow')">
+                    <div class="fc-icon fc-icon-amber">🐄</div>
+                    <div class="fc-body">
+                        <h3>Cattle &amp; Livestock Monitor</h3>
+                        <p>Detect early signs of lumpy skin disease, foot-and-mouth, and behavioral distress via live
+                            scan.</p>
+                        <a class="fc-link" href="#app" onclick="switchTab('cow')">Try Cattle AI →</a>
+                    </div>
+                </div>
+
+                <div class="feature-card" id="fc-chatbot" onclick="toggleChat()">
+                    <div class="fc-icon" style="background: #e0e7ff;">💬</div>
+                    <div class="fc-body">
+                        <h3>Interactive AI Chatbot</h3>
+                        <p>Ask queries in regional languages using voice or text for personalized farming guidance.</p>
+                        <a class="fc-link" href="#" onclick="event.preventDefault();">Open Chatbot →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Gemini Generated image mockup -->
+            <div class="showcase-right">
+                <div class="mockup-frame">
+                    <img src="{{ url_for('static', filename='Gemini_Generated_Image_hyij0zhyij0zhyij.png') }}"
+                        alt="FarmSathi AI – Smart Farming Interface" class="mockup-img">
+                    <div class="mockup-badge">
+                        <span class="badge-check">✓</span>
+                        ₹15 Lakhs+ Crop Loss Prevented
+                    </div>
+                    <div class="mockup-tag mockup-tag-1">🧠 AI Processing...</div>
+                    <div class="mockup-tag mockup-tag-2">🌡️ Soil pH: 6.5</div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         APP SECTION (All existing functionality)
+    ════════════════════════════════════════════ -->
+    <section class="app-section" id="app">
+        <div class="app-section-header">
+            <p class="showcase-eyebrow">Live AI Models</p>
+            <h2 class="app-section-title">Run Your Diagnosis Now</h2>
+            <p class="app-section-sub">Upload images or enter soil data — get instant AI-powered results</p>
+        </div>
+
+        <div class="app-container">
+            <!-- Tab Navigation -->
+            <div class="tabs-navigation">
+                <button class="tab-button active" id="tabBtnCrop" onclick="switchTab('crop')">
+                    <span class="tab-icon">🌱</span>
+                    <span class="tab-text">Crop Recommendation</span>
+                </button>
+                <button class="tab-button" id="tabBtnDisease" onclick="switchTab('disease')">
+                    <span class="tab-icon">🔍</span>
+                    <span class="tab-text">Plant Disease</span>
+                </button>
+                <button class="tab-button" id="tabBtnCow" onclick="switchTab('cow')">
+                    <span class="tab-icon">🐄</span>
+                    <span class="tab-text">Cow Disease</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: CROP RECOMMENDATION -->
+            <div id="cropTab" class="tab-content active">
+                <div class="form-section">
+                    <h2 class="section-title">🌍 Farm Conditions</h2>
+
+                    <form id="cropPredictionForm" class="input-grid">
+                        <!-- Nutrients Section -->
+                        <fieldset class="fieldset-group">
+                            <legend class="fieldset-title">🧪 Soil Nutrients (NPK)</legend>
+
+                            <div class="form-group">
+                                <label for="N">Nitrogen (N) <span class="unit">ppm</span></label>
+                                <input type="number" id="N" name="N" min="0" max="140" step="1" value="90" required>
+                                <small>Range: 0-140</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="P">Phosphorus (P) <span class="unit">ppm</span></label>
+                                <input type="number" id="P" name="P" min="0" max="145" step="1" value="42" required>
+                                <small>Range: 5-145</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="K">Potassium (K) <span class="unit">ppm</span></label>
+                                <input type="number" id="K" name="K" min="0" max="205" step="1" value="43" required>
+                                <small>Range: 5-205</small>
+                            </div>
+                        </fieldset>
+
+                        <!-- Environmental Conditions Section -->
+                        <fieldset class="fieldset-group">
+                            <legend class="fieldset-title">🌡️ Environmental Conditions</legend>
+
+                            <div class="form-group">
+                                <label for="temperature">Temperature <span class="unit">°C</span></label>
+                                <input type="number" id="temperature" name="temperature" min="8" max="44" step="0.1"
+                                    value="20.87" required>
+                                <small>Range: 8.8-43.7°C</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="humidity">Humidity <span class="unit">%</span></label>
+                                <input type="number" id="humidity" name="humidity" min="14" max="100" step="0.1"
+                                    value="82" required>
+                                <small>Range: 14-99.5%</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="ph">pH Level <span class="unit">pH</span></label>
+                                <input type="number" id="ph" name="ph" min="3" max="10" step="0.1" value="6.50"
+                                    required>
+                                <small>Range: 3.5-9.9</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="rainfall">Rainfall <span class="unit">mm</span></label>
+                                <input type="number" id="rainfall" name="rainfall" min="20" max="300" step="0.1"
+                                    value="202.93" required>
+                                <small>Range: 20.2-298.3mm</small>
+                            </div>
+                        </fieldset>
+                    </form>
+
+                    <button class="btn-predict" onclick="predictCrop()">
+                        <span>🚀 Get Crop Recommendation</span>
+                    </button>
+                </div>
+
+                <!-- Results Section -->
+                <div id="cropResultsSection" class="results-section hidden">
+                    <h2 class="section-title">📊 Results</h2>
+
+                    <div class="primary-result">
+                        <div class="result-card primary">
+                            <div class="crop-emoji" id="cropPrimaryEmoji">🌱</div>
+                            <div class="result-info">
+                                <h3 id="cropPrimaryName" class="crop-name">Loading...</h3>
+                                <p id="cropPrimaryDescription" class="crop-description">Recommended for your farm
+                                    conditions</p>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" id="cropConfidenceFill"></div>
+                                    <span class="confidence-text" id="cropConfidenceText">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recommendations">
+                        <h3 class="recommendations-title">Alternative Recommendations</h3>
+                        <div id="cropTopRecommendations" class="recommendations-grid"></div>
+                    </div>
+
+                    <button class="btn-reset" onclick="resetCropForm()">← Try Another</button>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="cropLoadingIndicator" class="loading-hidden">
+                    <div class="spinner"></div>
+                    <p>Analyzing your farm conditions...</p>
+                </div>
+
+                <!-- Error Message -->
+                <div id="cropErrorMessage" class="error-hidden">
+                    <p id="cropErrorText"></p>
+                </div>
+            </div>
+
+            <!-- TAB 2: DISEASE DETECTION -->
+            <div id="diseaseTab" class="tab-content">
+                <div class="form-section">
+                    <h2 class="section-title">🔍 Plant Disease Detection</h2>
+                    <p class="section-description">Upload a photo of a plant leaf to detect diseases</p>
+
+                    <div class="image-upload-section">
+                        <div class="upload-box" onclick="document.getElementById('diseaseImageInput').click()">
+                            <div class="upload-icon">📸</div>
+                            <h3>Click to upload plant image</h3>
+                            <p>or drag and drop</p>
+                            <p class="upload-hint">PNG, JPG, JPEG up to 10MB</p>
+                        </div>
+                        <input type="file" id="diseaseImageInput" accept="image/*" style="display:none;"
+                            onchange="handleImageSelect()">
+
+                        <div id="imagePreviewContainer" class="image-preview-container hidden">
+                            <img id="imagePreview" class="image-preview" src="" alt="Preview">
+                            <button class="btn-remove-image" onclick="removeImage()">✕ Remove Image</button>
+                        </div>
+                    </div>
+
+                    <button class="btn-predict" id="diseaseAnalyzeBtn" onclick="predictDisease()" disabled>
+                        <span>🔍 Analyze Plant Disease</span>
+                    </button>
+                </div>
+
+                <!-- Results Section -->
+                <div id="diseaseResultsSection" class="results-section hidden">
+                    <h2 class="section-title">📋 Analysis Results</h2>
+
+                    <div class="disease-result-card">
+                        <h3 id="diseaseTitle" class="disease-title">Disease Name</h3>
+                        <div class="confidence-display">
+                            <span class="confidence-label">Confidence:</span>
+                            <span class="confidence-value" id="diseaseConfidence">0%</span>
+                        </div>
+
+                        <div class="top-predictions">
+                            <h4>Top 3 Predictions</h4>
+                            <div id="diseaseTopPredictions" class="predictions-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- AI Treatment Advice -->
+                    <div id="plantAdviceSection" class="ai-advice-section">
+                        <div class="ai-advice-header">
+                            <span class="ai-icon">🤖</span>
+                            <h3>AI Treatment Advice</h3>
+                            <span id="plantAdviceSource" class="advice-source-badge"></span>
+                        </div>
+                        <div id="plantAdviceLoading" class="advice-loading hidden">
+                            <div class="advice-spinner"></div>
+                            <span>Generating AI advice...</span>
+                        </div>
+                        <div id="plantAdviceContent" class="advice-content hidden"></div>
+                    </div>
+
+                    <button class="btn-reset" onclick="resetDiseaseForm()">← Analyze Another</button>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="diseaseLoadingIndicator" class="loading-hidden">
+                    <div class="spinner"></div>
+                    <p>Analyzing plant image...</p>
+                </div>
+
+                <!-- Error Message -->
+                <div id="diseaseErrorMessage" class="error-hidden">
+                    <p id="diseaseErrorText"></p>
+                </div>
+            </div>
+
+            <!-- TAB 3: COW DISEASE DETECTION -->
+            <div id="cowTab" class="tab-content">
+                <div class="form-section">
+                    <h2 class="section-title">🐄 Cow Disease Detection</h2>
+                    <p class="section-description">Upload a photo of a cow to detect diseases like Foot-and-Mouth or
+                        Lumpy Skin Disease</p>
+
+                    <div class="image-upload-section">
+                        <div class="upload-box cow-upload-box"
+                            onclick="document.getElementById('cowImageInput').click()">
+                            <div class="upload-icon">🐄</div>
+                            <h3>Click to upload cow image</h3>
+                            <p>or drag and drop</p>
+                            <p class="upload-hint">PNG, JPG, JPEG up to 10MB</p>
+                        </div>
+                        <input type="file" id="cowImageInput" accept="image/*" style="display:none;"
+                            onchange="handleCowImageSelect()">
+
+                        <div id="cowImagePreviewContainer" class="image-preview-container hidden">
+                            <img id="cowImagePreview" class="image-preview" src="" alt="Preview">
+                            <button class="btn-remove-image" onclick="removeCowImage()">✕ Remove Image</button>
+                        </div>
+                    </div>
+
+                    <button class="btn-predict btn-cow" id="cowAnalyzeBtn" onclick="predictCowDisease()" disabled>
+                        <span>🔬 Analyze Cow Disease</span>
+                    </button>
+                </div>
+
+                <!-- Results Section -->
+                <div id="cowResultsSection" class="results-section hidden">
+                    <h2 class="section-title">📋 Cow Analysis Results</h2>
+
+                    <div class="cow-result-card">
+                        <div class="cow-result-header">
+                            <span class="cow-result-emoji" id="cowResultEmoji">🐄</span>
+                            <div>
+                                <h3 id="cowResultTitle" class="cow-result-title">-</h3>
+                                <div class="cow-severity-badge" id="cowSeverityBadge">-</div>
+                            </div>
+                        </div>
+
+                        <div class="confidence-display">
+                            <span class="confidence-label">Confidence:</span>
+                            <span class="confidence-value" id="cowConfidence">0%</span>
+                        </div>
+
+                        <div class="cow-description-box">
+                            <p id="cowDescription"></p>
+                        </div>
+
+                        <div class="top-predictions">
+                            <h4>Top 3 Predictions</h4>
+                            <div id="cowTopPredictions" class="predictions-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- AI Treatment Advice -->
+                    <div id="cowAdviceSection" class="ai-advice-section ai-advice-cow">
+                        <div class="ai-advice-header">
+                            <span class="ai-icon">🤖</span>
+                            <h3>AI Veterinary Advice</h3>
+                            <span id="cowAdviceSource" class="advice-source-badge"></span>
+                        </div>
+                        <div id="cowAdviceLoading" class="advice-loading hidden">
+                            <div class="advice-spinner"></div>
+                            <span>Generating AI advice...</span>
+                        </div>
+                        <div id="cowAdviceContent" class="advice-content hidden"></div>
+                    </div>
+
+                    <button class="btn-reset" onclick="resetCowForm()">← Analyze Another Cow</button>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="cowLoadingIndicator" class="loading-hidden">
+                    <div class="spinner"></div>
+                    <p>Analyzing cow image...</p>
+                </div>
+
+                <!-- Error Message -->
+                <div id="cowErrorMessage" class="error-hidden">
+                    <p id="cowErrorText"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         FOOTER
+    ════════════════════════════════════════════ -->
+    <footer class="footer" id="footer">
+        <div class="footer-inner">
+            <div class="footer-logo">
+                <span>🌿</span> FarmSathi AI
+            </div>
+            <p class="footer-tagline">Empowering Indian farmers with the power of Generative AI</p>
+            <div class="footer-stats">
+                <span>🌾 Crop Model: 99.32% Accuracy</span>
+                <span>·</span>
+                <span>🔬 Plant Disease: 38 Classes</span>
+                <span>·</span>
+                <span>🐄 Cow Disease: MobileNetV2</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ═══════════════════════════════════════════
+         FLOATING VOICE CHAT WIDGET
+    ════════════════════════════════════════════ -->
+    <button id="chatFab" class="chat-fab" onclick="toggleChat()" title="Open Voice Chat">
+        <span id="chatFabIcon">💬</span>
+    </button>
+
+    <div id="chatWindow" class="chat-window hidden">
+        <div class="chat-header">
+            <div class="chat-header-left">
+                <span class="chat-logo">🌾</span>
+                <div>
+                    <div class="chat-title">FarmAI Assistant</div>
+                    <div class="chat-subtitle">Voice &amp; Text · Multilingual</div>
+                </div>
+            </div>
+            <div class="chat-header-actions">
+                <select id="langSelect" class="lang-select" onchange="onLanguageChange()">
+                    <option value="en">🇬🇧 English</option>
+                    <option value="hi">🇮🇳 हिंदी</option>
+                    <option value="pa">🇮🇳 ਪੰਜਾਬੀ</option>
+                    <option value="te">🇮🇳 తెలుగు</option>
+                    <option value="ta">🇮🇳 தமிழ்</option>
+                    <option value="mr">🇮🇳 मराठी</option>
+                    <option value="kn">🇮🇳 ಕನ್ನಡ</option>
+                    <option value="gu">🇮🇳 ગુજરાતી</option>
+                    <option value="bn">🇮🇳 বাংলা</option>
+                </select>
+                <button class="chat-close-btn" onclick="toggleChat()">✕</button>
+            </div>
+        </div>
+
+        <div id="chatMessages" class="chat-messages"></div>
+
+        <div id="chatTyping" class="chat-typing hidden">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-label">FarmAI is thinking...</span>
+        </div>
+
+        <div class="chat-input-row">
+            <button id="voiceBtn" class="voice-btn" onclick="toggleVoice()" title="Tap to speak">🎙️</button>
+            <input id="chatInput" class="chat-input" type="text" placeholder="Ask anything about farming..."
+                onkeydown="if(event.key==='Enter') sendMessage()">
+            <button class="chat-send-btn" onclick="sendMessage()">➤</button>
+        </div>
+
+        <div id="voiceStatus" class="voice-status hidden">
+            <span class="voice-pulse"></span>
+            <span id="voiceStatusText">Listening...</span>
+            <button class="voice-stop-btn" onclick="stopVoice()">Stop</button>
+        </div>
+    </div>
+
+    <script>
+        // Feature showcase selector
+        function selectFeature(name) {
+            document.querySelectorAll('.feature-card').forEach(c => c.classList.remove('active-feature'));
+            document.getElementById('fc-' + name).classList.add('active-feature');
+        }
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            nav.classList.toggle('nav-scrolled', window.scrollY > 40);
+        });
+    </script>
+
+    <script>
+        // ═══════════════════════════════════════════════════════
+        //  CHAT STATE
+        // ═══════════════════════════════════════════════════════
+        const LANG_VOICE_MAP = {
+            'en': 'en-IN', 'hi': 'hi-IN', 'pa': 'pa-IN', 'te': 'te-IN',
+            'ta': 'ta-IN', 'mr': 'mr-IN', 'kn': 'kn-IN', 'gu': 'gu-IN', 'bn': 'bn-IN'
+        };
+        const LANG_GREETINGS = {
+            'en': "Hello! Ask me anything about crops, plant diseases, or cow health. I support voice input too! 🎙️",
+            'hi': "नमस्ते! फसल, पौधों की बीमारी या गाय के स्वास्थ्य के बारे में पूछें। आवाज़ से भी पूछ सकते हैं! 🎙️",
+            'pa': "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਫ਼ਸਲ, ਬਿਮਾਰੀਆਂ ਜਾਂ ਗਾਂ ਦੀ ਸਿਹਤ ਬਾਰੇ ਪੁੱਛੋ। ਆਵਾਜ਼ ਨਾਲ ਵੀ ਪੁੱਛ ਸਕਦੇ ਹੋ! 🎙️",
+            'te': "నమస్కారం! పంటలు, వ్యాధులు లేదా ఆవు ఆరోగ్యం గురించి అడగండి. గొంతుతో కూడా అడగవచ్చు! 🎙️",
+            'ta': "வணக்கம்! பயிர்கள், நோய்கள் அல்லது மாட்டின் ஆரோக்கியம் பற்றி கேளுங்கள்! 🎙️",
+            'mr': "नमस्कार! पिके, रोग किंवा गाईच्या आरोग्याबद्दल विचारा. बोलूनही विचारू शकता! 🎙️",
+            'kn': "ನಮಸ್ಕಾರ! ಬೆಳೆ, ರೋಗ ಅಥವಾ ಹಸುವಿನ ಆರೋಗ್ಯ ಬಗ್ಗೆ ಕೇಳಿ. ಮಾತನಾಡಿ ಕೇಳಬಹುದು! 🎙️",
+            'gu': "નમસ્તે! પાક, રોગ અથવા ગાયના સ્વાસ્થ્ય વિશે પૂછો. બોલીને પણ પૂછી શકો! 🎙️",
+            'bn': "নমস্কার! ফসল, রোগ বা গরুর স্বাস্থ্য সম্পর্কে জিজ্ঞাসা করুন। কথা বলেও জিজ্ঞাসা করতে পারেন! 🎙️",
+        };
+
+        let chatHistory = [], recognition = null, isListening = false, isChatOpen = false, currentLang = 'en';
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const speechSupported = !!SpeechRecognition;
+        if (!speechSupported) {
+            document.addEventListener('DOMContentLoaded', () => {
+                const vb = document.getElementById('voiceBtn');
+                if (vb) { vb.style.opacity = '0.4'; vb.style.cursor = 'not-allowed'; vb.title = 'Voice not supported in this browser'; }
+            });
+        }
+
+        function toggleChat() {
+            isChatOpen = !isChatOpen;
+            const win = document.getElementById('chatWindow');
+            const fab = document.getElementById('chatFabIcon');
+            if (isChatOpen) {
+                win.classList.remove('hidden');
+                fab.textContent = '✕';
+                if (chatHistory.length === 0) showGreeting();
+                setTimeout(() => document.getElementById('chatInput').focus(), 300);
+            } else {
+                win.classList.add('hidden');
+                fab.textContent = '💬';
+                if (isListening) stopVoice();
+            }
+        }
+
+        function showGreeting() {
+            chatHistory = [];
+            document.getElementById('chatMessages').innerHTML = '';
+            addBotMessage(LANG_GREETINGS[currentLang] || LANG_GREETINGS['en'], false);
+        }
+
+        function onLanguageChange() {
+            currentLang = document.getElementById('langSelect').value;
+            const placeholders = {
+                'hi': 'खेती के बारे में कुछ भी पूछें...', 'pa': 'ਖੇਤੀ ਬਾਰੇ ਕੁਝ ਵੀ ਪੁੱਛੋ...',
+                'te': 'వ్యవసాయం గురించి ఏదైనా అడగండి...', 'ta': 'வேளாண்மை பற்றி கேளுங்கள்...',
+                'mr': 'शेतीबद्दल काहीही विचारा...', 'kn': 'ಕೃಷಿ ಬಗ್ಗೆ ಏನಾದರೂ ಕೇಳಿ...',
+                'gu': 'ખેતી વિશે કંઈ પણ પૂછો...', 'bn': 'কৃষি সম্পর্কে যেকোনো কিছু জিজ্ঞাসা করুন...',
+            };
+            document.getElementById('chatInput').placeholder = placeholders[currentLang] || 'Ask anything about farming...';
+            showGreeting();
+        }
+
+        function addUserMessage(text) {
+            const msgs = document.getElementById('chatMessages');
+            const d = document.createElement('div');
+            d.className = 'chat-msg chat-msg-user';
+            d.innerHTML = `<div class="chat-bubble user-bubble">${escHtml(text)}</div>`;
+            msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+            chatHistory.push({ role: 'user', text });
+        }
+
+        function addBotMessage(text, speak = true) {
+            const msgs = document.getElementById('chatMessages');
+            const d = document.createElement('div');
+            d.className = 'chat-msg chat-msg-bot';
+            const formatted = escHtml(text)
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+            d.innerHTML = `<div class="bot-avatar">🌾</div><div class="chat-bubble bot-bubble">${formatted}</div>`;
+            msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+            chatHistory.push({ role: 'assistant', text });
+            if (speak) speakText(text);
+        }
+
+        function escHtml(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = '';
+            addUserMessage(text);
+            await getBotReply(text);
+        }
+
+        async function getBotReply(text) {
+            const typing = document.getElementById('chatTyping');
+            typing.classList.remove('hidden');
+            document.getElementById('chatMessages').scrollTop = 99999;
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, language: currentLang, history: chatHistory.slice(-10) })
+                });
+                const data = await res.json();
+                addBotMessage(data.success ? data.reply : 'Sorry, I could not process that. Please try again.');
+            } catch (e) {
+                addBotMessage('Connection error. Please check if the server is running.');
+            } finally {
+                typing.classList.add('hidden');
+            }
+        }
+
+        function toggleVoice() {
+            if (!speechSupported) { alert('Voice input requires Chrome or Edge browser.'); return; }
+            isListening ? stopVoice() : startVoice();
+        }
+
+        function startVoice() {
+            recognition = new SpeechRecognition();
+            recognition.lang = LANG_VOICE_MAP[currentLang] || 'en-IN';
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('voiceBtn').classList.add('voice-active');
+                document.getElementById('voiceStatus').classList.remove('hidden');
+                document.getElementById('voiceStatusText').textContent = 'Listening...';
+                document.getElementById('chatInput').value = '';
+            };
+            recognition.onresult = (e) => {
+                let interim = '', final = '';
+                for (let i = e.resultIndex; i < e.results.length; i++) {
+                    if (e.results[i].isFinal) final += e.results[i][0].transcript;
+                    else interim += e.results[i][0].transcript;
+                }
+                document.getElementById('chatInput').value = final || interim;
+                if (final) document.getElementById('voiceStatusText').textContent = '✓ Got it!';
+            };
+            recognition.onend = () => {
+                isListening = false;
+                document.getElementById('voiceBtn').classList.remove('voice-active');
+                document.getElementById('voiceStatus').classList.add('hidden');
+                const finalText = document.getElementById('chatInput').value.trim();
+                if (finalText) { document.getElementById('chatInput').value = ''; addUserMessage(finalText); getBotReply(finalText); }
+            };
+            recognition.onerror = (e) => {
+                isListening = false;
+                document.getElementById('voiceBtn').classList.remove('voice-active');
+                document.getElementById('voiceStatus').classList.add('hidden');
+                if (e.error !== 'aborted') addBotMessage('Voice error: ' + e.error + '. Please type instead.');
+            };
+            recognition.start();
+        }
+
+        function stopVoice() {
+            if (recognition) { recognition.stop(); recognition = null; }
+            isListening = false;
+            document.getElementById('voiceBtn').classList.remove('voice-active');
+            document.getElementById('voiceStatus').classList.add('hidden');
+        }
+
+        function speakText(text) {
+            if (!window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const clean = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/#+/g, '').replace(/<[^>]*>/g, '');
+            const utt = new SpeechSynthesisUtterance(clean);
+            const voices = window.speechSynthesis.getVoices();
+            const langPrefix = (LANG_VOICE_MAP[currentLang] || 'en').split('-')[0];
+            const match = voices.find(v => v.lang.startsWith(langPrefix));
+            if (match) utt.voice = match;
+            utt.lang = LANG_VOICE_MAP[currentLang] || 'en-IN';
+            utt.rate = 0.9; utt.pitch = 1.0;
+            window.speechSynthesis.speak(utt);
+        }
+        if (window.speechSynthesis) {
+            window.speechSynthesis.getVoices();
+            window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+        }
+    </script>
+
+    <script>
+        // TAB SWITCHING
+        function switchTab(tabName) {
+            ['cropTab', 'diseaseTab', 'cowTab'].forEach(id => {
+                document.getElementById(id).classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+
+            if (tabName === 'crop') {
+                document.getElementById('cropTab').classList.add('active');
+                document.getElementById('tabBtnCrop').classList.add('active');
+            } else if (tabName === 'disease') {
+                document.getElementById('diseaseTab').classList.add('active');
+                document.getElementById('tabBtnDisease').classList.add('active');
+            } else if (tabName === 'cow') {
+                document.getElementById('cowTab').classList.add('active');
+                document.getElementById('tabBtnCow').classList.add('active');
+            }
+        }
+
+        // ============ CROP PREDICTION ============
+        async function predictCrop() {
+            const formData = {
+                N: document.getElementById('N').value,
+                P: document.getElementById('P').value,
+                K: document.getElementById('K').value,
+                temperature: document.getElementById('temperature').value,
+                humidity: document.getElementById('humidity').value,
+                ph: document.getElementById('ph').value,
+                rainfall: document.getElementById('rainfall').value,
+            };
+
+            document.getElementById('cropLoadingIndicator').classList.remove('loading-hidden');
+            document.getElementById('cropErrorMessage').classList.add('error-hidden');
+            document.getElementById('cropResultsSection').classList.add('hidden');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    displayCropResults(result);
+                } else {
+                    showCropError(result.error || 'Prediction failed. Please try again.');
+                }
+            } catch (error) {
+                showCropError('Error: ' + error.message);
+            } finally {
+                document.getElementById('cropLoadingIndicator').classList.add('loading-hidden');
+            }
+        }
+
+        function displayCropResults(result) {
+            document.getElementById('cropPrimaryEmoji').textContent = result.emoji;
+            document.getElementById('cropPrimaryName').textContent = result.primary_crop.charAt(0).toUpperCase() + result.primary_crop.slice(1);
+            document.getElementById('cropPrimaryDescription').textContent = result.description;
+
+            const confidenceValue = parseFloat(result.confidence);
+            document.getElementById('cropConfidenceFill').style.width = confidenceValue + '%';
+            document.getElementById('cropConfidenceText').textContent = result.confidence;
+
+            const recommendationsContainer = document.getElementById('cropTopRecommendations');
+            recommendationsContainer.innerHTML = '';
+
+            result.top_recommendations.forEach((crop, index) => {
+                if (index > 0) {
+                    const card = document.createElement('div');
+                    card.className = 'recommendation-card';
+                    card.innerHTML = `
+                        <div class="card-emoji">${crop.emoji}</div>
+                        <h4>${crop.crop.charAt(0).toUpperCase() + crop.crop.slice(1)}</h4>
+                        <p class="card-confidence">${crop.confidence}</p>
+                        <p class="card-description">${crop.description}</p>
+                    `;
+                    recommendationsContainer.appendChild(card);
+                }
+            });
+
+            document.getElementById('cropResultsSection').classList.remove('hidden');
+            document.getElementById('cropResultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showCropError(message) {
+            document.getElementById('cropErrorText').textContent = message;
+            document.getElementById('cropErrorMessage').classList.remove('error-hidden');
+        }
+
+        function resetCropForm() {
+            document.getElementById('cropPredictionForm').reset();
+            document.getElementById('cropResultsSection').classList.add('hidden');
+            document.getElementById('cropErrorMessage').classList.add('error-hidden');
+            document.getElementById('cropPredictionForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ============ DISEASE DETECTION ============
+        let selectedImageFile = null;
+
+        function handleImageSelect() {
+            const fileInput = document.getElementById('diseaseImageInput');
+            const file = fileInput.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) { showDiseaseError('Please select a valid image file'); return; }
+            if (file.size > 10 * 1024 * 1024) { showDiseaseError('Image size must be less than 10MB'); return; }
+            selectedImageFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                document.getElementById('diseaseAnalyzeBtn').disabled = false;
+                document.getElementById('diseaseErrorMessage').classList.add('error-hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage() {
+            selectedImageFile = null;
+            document.getElementById('diseaseImageInput').value = '';
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('diseaseAnalyzeBtn').disabled = true;
+        }
+
+        async function predictDisease() {
+            if (!selectedImageFile) { showDiseaseError('Please select an image'); return; }
+            const formData = new FormData();
+            formData.append('image', selectedImageFile);
+
+            document.getElementById('diseaseLoadingIndicator').classList.remove('loading-hidden');
+            document.getElementById('diseaseErrorMessage').classList.add('error-hidden');
+            document.getElementById('diseaseResultsSection').classList.add('hidden');
+
+            try {
+                const response = await fetch('/predict-disease', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.success) { displayDiseaseResults(result); }
+                else { showDiseaseError(result.error || 'Disease detection failed. Please try again.'); }
+            } catch (error) {
+                showDiseaseError('Error: ' + error.message);
+            } finally {
+                document.getElementById('diseaseLoadingIndicator').classList.add('loading-hidden');
+            }
+        }
+
+        function displayDiseaseResults(result) {
+            document.getElementById('diseaseTitle').textContent = result.predicted_disease;
+            document.getElementById('diseaseConfidence').textContent = result.confidence;
+
+            const predictionsContainer = document.getElementById('diseaseTopPredictions');
+            predictionsContainer.innerHTML = '';
+            result.top_3.forEach((pred, index) => {
+                const predDiv = document.createElement('div');
+                predDiv.className = 'prediction-item';
+                predDiv.innerHTML = `
+                    <span class="pred-rank">${index + 1}</span>
+                    <span class="pred-name">${pred.disease}</span>
+                    <span class="pred-confidence">${pred.confidence}</span>
+                `;
+                predictionsContainer.appendChild(predDiv);
+            });
+
+            document.getElementById('diseaseResultsSection').classList.remove('hidden');
+            document.getElementById('diseaseResultsSection').scrollIntoView({ behavior: 'smooth' });
+            fetchTreatmentAdvice('plant', result.predicted_disease, 'plantAdviceLoading', 'plantAdviceContent', 'plantAdviceSource');
+        }
+
+        function showDiseaseError(message) {
+            document.getElementById('diseaseErrorText').textContent = message;
+            document.getElementById('diseaseErrorMessage').classList.remove('error-hidden');
+        }
+
+        function resetDiseaseForm() {
+            removeImage();
+            document.getElementById('diseaseResultsSection').classList.add('hidden');
+            document.getElementById('diseaseErrorMessage').classList.add('error-hidden');
+        }
+
+        // ============ COW DISEASE DETECTION ============
+        let selectedCowImageFile = null;
+
+        function handleCowImageSelect() {
+            const fileInput = document.getElementById('cowImageInput');
+            const file = fileInput.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) { showCowError('Please select a valid image file'); return; }
+            if (file.size > 10 * 1024 * 1024) { showCowError('Image size must be less than 10MB'); return; }
+            selectedCowImageFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('cowImagePreview').src = e.target.result;
+                document.getElementById('cowImagePreviewContainer').classList.remove('hidden');
+                document.getElementById('cowAnalyzeBtn').disabled = false;
+                document.getElementById('cowErrorMessage').classList.add('error-hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeCowImage() {
+            selectedCowImageFile = null;
+            document.getElementById('cowImageInput').value = '';
+            document.getElementById('cowImagePreviewContainer').classList.add('hidden');
+            document.getElementById('cowAnalyzeBtn').disabled = true;
+        }
+
+        async function predictCowDisease() {
+            if (!selectedCowImageFile) { showCowError('Please select an image'); return; }
+            const formData = new FormData();
+            formData.append('image', selectedCowImageFile);
+
+            document.getElementById('cowLoadingIndicator').classList.remove('loading-hidden');
+            document.getElementById('cowErrorMessage').classList.add('error-hidden');
+            document.getElementById('cowResultsSection').classList.add('hidden');
+
+            try {
+                const response = await fetch('/predict-cow-disease', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.success) { displayCowResults(result); }
+                else { showCowError(result.error || 'Cow disease detection failed. Please try again.'); }
+            } catch (error) {
+                showCowError('Error: ' + error.message);
+            } finally {
+                document.getElementById('cowLoadingIndicator').classList.add('loading-hidden');
+            }
+        }
+
+        function displayCowResults(result) {
+            document.getElementById('cowResultEmoji').textContent = result.emoji;
+            document.getElementById('cowResultTitle').textContent = result.predicted_class.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            document.getElementById('cowConfidence').textContent = result.confidence;
+            document.getElementById('cowDescription').textContent = result.description;
+
+            const badge = document.getElementById('cowSeverityBadge');
+            badge.textContent = '⚡ Severity: ' + result.severity;
+            badge.className = 'cow-severity-badge severity-' + result.severity.toLowerCase();
+
+            const container = document.getElementById('cowTopPredictions');
+            container.innerHTML = '';
+            result.top_3.forEach((pred, index) => {
+                const div = document.createElement('div');
+                div.className = 'prediction-item';
+                div.innerHTML = `
+                    <span class="pred-rank">${pred.emoji || (index + 1)}</span>
+                    <span class="pred-name">${pred.disease.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
+                    <span class="pred-confidence">${pred.confidence}</span>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('cowResultsSection').classList.remove('hidden');
+            document.getElementById('cowResultsSection').scrollIntoView({ behavior: 'smooth' });
+            fetchTreatmentAdvice('cow', result.predicted_class, 'cowAdviceLoading', 'cowAdviceContent', 'cowAdviceSource');
+        }
+
+        function showCowError(message) {
+            document.getElementById('cowErrorText').textContent = message;
+            document.getElementById('cowErrorMessage').classList.remove('error-hidden');
+        }
+
+        function resetCowForm() {
+            removeCowImage();
+            document.getElementById('cowResultsSection').classList.add('hidden');
+            document.getElementById('cowErrorMessage').classList.add('error-hidden');
+            document.getElementById('cowAdviceContent').classList.add('hidden');
+            document.getElementById('cowAdviceContent').innerHTML = '';
+        }
+
+        // ============ AI TREATMENT ADVICE ============
+        async function fetchTreatmentAdvice(type, disease, loadingId, contentId, sourceId) {
+            const loadingEl = document.getElementById(loadingId);
+            const contentEl = document.getElementById(contentId);
+            const sourceEl = document.getElementById(sourceId);
+
+            contentEl.classList.add('hidden');
+            contentEl.innerHTML = '';
+            loadingEl.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/api/treatment-advice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type, disease })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    sourceEl.textContent = result.source === 'gemini' ? '✨ Powered by Gemini AI' : '📚 Knowledge Base';
+                    sourceEl.className = `advice-source-badge ${result.source === 'gemini' ? 'badge-gemini' : 'badge-fallback'}`;
+                    contentEl.innerHTML = renderAdvice(type, result.advice);
+                    contentEl.classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error('Advice fetch error:', e);
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        function renderAdvice(type, advice) {
+            let html = '';
+            const urgencyColor = { 'Critical': '#c0392b', 'High': '#e74c3c', 'Medium': '#f39c12', 'Low': '#2ecc71', 'None': '#2ecc71' };
+            const urg = advice.urgency || 'Unknown';
+            html += `<div class="advice-urgency" style="background:${urgencyColor[urg] || '#888'}">
+                        ⚠️ Urgency Level: <strong>${urg}</strong>
+                     </div>`;
+
+            if (type === 'plant') {
+                if (advice.pesticides && advice.pesticides.length) {
+                    html += '<div class="advice-block"><h4>🧪 Recommended Pesticides / Fungicides</h4><div class="advice-table-wrap"><table class="advice-table"><thead><tr><th>Product</th><th>Type</th><th>Dose</th><th>Frequency</th></tr></thead><tbody>';
+                    advice.pesticides.forEach(p => { html += `<tr><td><strong>${p.name}</strong></td><td><span class="type-badge">${p.type}</span></td><td>${p.dose}</td><td>${p.frequency}</td></tr>`; });
+                    html += '</tbody></table></div></div>';
+                }
+                if (advice.organic_alternatives && advice.organic_alternatives.length) {
+                    html += '<div class="advice-block"><h4>🌿 Organic Alternatives</h4><ul class="advice-list">';
+                    advice.organic_alternatives.forEach(o => html += `<li>🍃 ${o}</li>`);
+                    html += '</ul></div>';
+                }
+                if (advice.cultural_practices && advice.cultural_practices.length) {
+                    html += '<div class="advice-block"><h4>🌾 Cultural Practices</h4><ul class="advice-list">';
+                    advice.cultural_practices.forEach(c => html += `<li>✅ ${c}</li>`);
+                    html += '</ul></div>';
+                }
+                if (advice.safety_precautions && advice.safety_precautions.length) {
+                    html += '<div class="advice-block advice-block-warn"><h4>⚠️ Safety Precautions</h4><ul class="advice-list">';
+                    advice.safety_precautions.forEach(s => html += `<li>🛡️ ${s}</li>`);
+                    html += '</ul></div>';
+                }
+            } else {
+                if (advice.medicines && advice.medicines.length) {
+                    html += '<div class="advice-block"><h4>💊 Medicines &amp; Treatments</h4><div class="advice-table-wrap"><table class="advice-table"><thead><tr><th>Medicine</th><th>Type</th><th>Dosage</th><th>Route</th></tr></thead><tbody>';
+                    advice.medicines.forEach(m => { html += `<tr><td><strong>${m.name}</strong></td><td><span class="type-badge">${m.type}</span></td><td>${m.dosage}</td><td>${m.route}</td></tr>`; });
+                    html += '</tbody></table></div></div>';
+                }
+                if (advice.home_care && advice.home_care.length) {
+                    html += '<div class="advice-block"><h4>🏠 Home Care Steps</h4><ul class="advice-list">';
+                    advice.home_care.forEach(h => html += `<li>👉 ${h}</li>`);
+                    html += '</ul></div>';
+                }
+                if (advice.prevention && advice.prevention.length) {
+                    html += '<div class="advice-block"><h4>🛡️ Prevention</h4><ul class="advice-list">';
+                    advice.prevention.forEach(p => html += `<li>✅ ${p}</li>`);
+                    html += '</ul></div>';
+                }
+                if (advice.vet_visit) {
+                    html += `<div class="advice-block advice-block-vet"><h4>🩺 Veterinary Visit</h4><p>${advice.vet_visit}</p></div>`;
+                }
+            }
+
+            if (advice.general_tips && advice.general_tips.length) {
+                html += '<div class="advice-block"><h4>💡 General Tips</h4><ul class="advice-list">';
+                advice.general_tips.forEach(t => html += `<li>👉 ${t}</li>`);
+                html += '</ul></div>';
+            }
+            if (advice.note) {
+                html += `<div class="advice-note">ℹ️ ${advice.note}</div>`;
+            }
+            return html;
+        }
+
+        // Drag and drop support
+        const uploadBox = document.querySelector('.upload-box');
+        if (uploadBox) {
+            uploadBox.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadBox.style.borderColor = '#16A34A';
+                uploadBox.style.backgroundColor = 'rgba(22,163,74,0.06)';
+            });
+            uploadBox.addEventListener('dragleave', () => {
+                uploadBox.style.borderColor = '';
+                uploadBox.style.backgroundColor = '';
+            });
+            uploadBox.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadBox.style.borderColor = '';
+                uploadBox.style.backgroundColor = '';
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    document.getElementById('diseaseImageInput').files = files;
+                    handleImageSelect();
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
