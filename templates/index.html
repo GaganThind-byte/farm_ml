@@ -21,11 +21,28 @@
          SITE HEADER – FarmSathi AI name only
     ════════════════════════════════════════════ -->
     <header class="site-header">
+        <div class="header-spacer" style="width: 160px;"></div> <!-- Spacer to keep logo centered -->
         <a class="site-logo" href="#">
             <span>🌿</span>
             FarmSathi <span class="logo-ai">AI</span>
         </a>
+        <div id="google_translate_element"
+            style="width: 160px; text-align: right; overflow: hidden; height: 35px; border-radius: 8px;"></div>
     </header>
+
+    <!-- Google Translate Script -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'hi,pa,te,ta,mr,kn,gu,bn,en', // Indian regional languages
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript"
+        src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     <!-- ═══════════════════════════════════════════
          FEATURE SHOWCASE (2-COL)
@@ -152,8 +169,15 @@
                         </fieldset>
 
                         <!-- Environmental Conditions Section -->
-                        <fieldset class="fieldset-group">
-                            <legend class="fieldset-title">🌡️ Environmental Conditions</legend>
+                        <fieldset class="fieldset-group" style="position: relative;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <legend class="fieldset-title" style="margin-bottom: 0;">🌡️ Environmental Conditions
+                                </legend>
+                                <button type="button" class="btn-location" id="gpsBtn" onclick="autoFillGPS()">
+                                    📍 Use My Location
+                                </button>
+                            </div>
 
                             <div class="form-group">
                                 <label for="temperature">Temperature <span class="unit">°C</span></label>
@@ -582,10 +606,18 @@
             const typing = document.getElementById('chatTyping');
             typing.classList.remove('hidden');
             document.getElementById('chatMessages').scrollTop = 99999;
+
+            // Context-Aware Diagnostics: Attach hidden prediction history if it exists
+            let payloadMessage = text;
+            if (window.activeDiagnosticContext) {
+                payloadMessage = `[System Status - Invisible to User: The user just ran an AI image scan. Result: ${window.activeDiagnosticContext}. Keep your answer natural.] \n\nUser Question: ` + text;
+                window.activeDiagnosticContext = ""; // Consume it so it's not sent twice
+            }
+
             try {
                 const res = await fetch('/api/chat', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text, language: currentLang, history: chatHistory.slice(-10) })
+                    body: JSON.stringify({ message: payloadMessage, language: currentLang, history: chatHistory.slice(-10) })
                 });
                 const data = await res.json();
                 addBotMessage(data.success ? data.reply : 'Sorry, I could not process that. Please try again.');
@@ -815,6 +847,9 @@
 
             document.getElementById('cropResultsSection').classList.remove('hidden');
             document.getElementById('cropResultsSection').scrollIntoView({ behavior: 'smooth' });
+
+            // Send context silently to the chatbot so it's aware of the crop recommendation
+            window.activeDiagnosticContext = `Crop Recommendation generated. The top recommended crop for their soil is "${result.primary_crop}" with confidence ${result.confidence}. The runner ups are ${result.top_recommendations.slice(1).map(c => c.crop).join(' and ')}`;
         }
 
         function showCropError(message) {
@@ -827,6 +862,58 @@
             document.getElementById('cropResultsSection').classList.add('hidden');
             document.getElementById('cropErrorMessage').classList.add('error-hidden');
             document.getElementById('cropPredictionForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function autoFillGPS() {
+            const btn = document.getElementById('gpsBtn');
+            const originalText = btn.innerHTML;
+
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            btn.innerHTML = "⏳ Locating...";
+            btn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                try {
+                    btn.innerHTML = "☁️ Fetching weather...";
+                    // Using Open-Meteo API (Free, no API key required)
+                    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m`);
+                    const data = await res.json();
+
+                    if (data.current) {
+                        document.getElementById('temperature').value = data.current.temperature_2m;
+                        document.getElementById('humidity').value = data.current.relative_humidity_2m;
+
+                        btn.innerHTML = "✅ Auto-filled!";
+                        setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 3000);
+
+                        // Add a small highlight animation
+                        document.getElementById('temperature').style.backgroundColor = '#dcfce7';
+                        document.getElementById('humidity').style.backgroundColor = '#dcfce7';
+                        setTimeout(() => {
+                            document.getElementById('temperature').style.backgroundColor = '';
+                            document.getElementById('humidity').style.backgroundColor = '';
+                        }, 1500);
+                    } else {
+                        throw new Error("Weather data not available for this location.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Could not fetch weather data. Please enter manually.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            }, (error) => {
+                alert("Location access denied or failed. Please enter conditions manually.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
         }
 
         // ============ DISEASE DETECTION ============
@@ -897,6 +984,9 @@
             document.getElementById('diseaseResultsSection').classList.remove('hidden');
             document.getElementById('diseaseResultsSection').scrollIntoView({ behavior: 'smooth' });
             fetchTreatmentAdvice('plant', result.predicted_disease, 'plantAdviceLoading', 'plantAdviceContent', 'plantAdviceSource');
+
+            // Send context silently to the chatbot so it's ready for any follow-up questions
+            window.activeDiagnosticContext = `Plant / Leaf detected with "${result.predicted_disease}". Confidence level: ${result.confidence}`;
         }
 
         function showDiseaseError(message) {
@@ -984,6 +1074,9 @@
             document.getElementById('cowResultsSection').classList.remove('hidden');
             document.getElementById('cowResultsSection').scrollIntoView({ behavior: 'smooth' });
             fetchTreatmentAdvice('cow', result.predicted_class, 'cowAdviceLoading', 'cowAdviceContent', 'cowAdviceSource');
+
+            // Send context silently to the chatbot so it's aware of the cow diagnostic
+            window.activeDiagnosticContext = `Cow / Cattle detected with "${result.predicted_class.replace(/-/g, ' ')}". Severity: ${result.severity}. Confidence: ${result.confidence}`;
         }
 
         function showCowError(message) {

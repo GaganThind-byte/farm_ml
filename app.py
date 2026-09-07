@@ -573,13 +573,67 @@ FARMING_SYSTEM_PROMPT = (
 )
 
 
+# ── Chatbot Tools ──────────────────────────────────────────────────
+def fetch_live_weather(location_name: str) -> str:
+    """Gets the real-time weather, temperature, and 3-day precipitation forecast for a given city/location. USE THIS whenever a user asks about weather or rain."""
+    import requests
+    try:
+        geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={location_name}&count=1&format=json"
+        geo_data = requests.get(geo_url, timeout=5).json()
+        if not geo_data.get("results"): return f"Could not find coordinates for {location_name}."
+        lat, lon = geo_data["results"][0]["latitude"], geo_data["results"][0]["longitude"]
+        
+        weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FKolkata"
+        weather_data = requests.get(weather_url, timeout=5).json()
+        return f"Live Weather for {location_name}: {weather_data}"
+    except Exception as e:
+        return f"Weather API error: {str(e)}"
+
+def fetch_mandi_price(crop_name: str, location: str) -> str:
+    """Gets the current mandi (wholesale market) price for a crop in a given Indian state/city."""
+    import requests
+    import os
+    
+    # Load government API key
+    API_KEY = os.getenv("DATAGOV_API_KEY")
+    if not API_KEY:
+        return "Market API Key is missing from the environment."
+        
+    # The unique ID for the "Current Daily Price of Various Commodities" dataset
+    RESOURCE_ID = "9ef84268-d588-465a-a308-a864a43d0070" 
+    
+    # Capitalize for the government API filter which usually expects standard casing
+    crop_filter = crop_name.title()
+    state_filter = location.title()
+    
+    url = f"https://api.data.gov.in/resource/{RESOURCE_ID}?api-key={API_KEY}&format=json&filters[commodity]={crop_filter}&filters[state]={state_filter}"
+    
+    try:
+        response = requests.get(url, timeout=5).json()
+        records = response.get('records', [])
+        
+        if not records:
+            return f"No live mandi data recently registered for {crop_filter} in {state_filter}. Note: Tell the user to try checking a broader state level or spelling."
+            
+        # Grab the first available market record matched
+        market_data = records[0]
+        market_name = market_data.get('market', 'Local Mandi')
+        min_price = market_data.get('min_price', 'N/A')
+        max_price = market_data.get('max_price', 'N/A')
+        modal_price = market_data.get('modal_price', 'N/A')
+        
+        return f"Real-Time Mandi Price for {crop_filter} in {state_filter} ({market_name} market): Average Price ₹{modal_price}/Quintal. Prices range between ₹{min_price} and ₹{max_price}."
+        
+    except Exception as e:
+        return f"Market API error: {str(e)}"
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     """Multilingual conversational farming assistant powered by Gemini"""
-    data     = request.json or {}
-    message  = data.get('message', '').strip()
+    data      = request.json or {}
+    message   = data.get('message', '').strip()
     lang_code = data.get('language', 'en')
-    history  = data.get('history', [])   # list of {role, text} dicts
+    history   = data.get('history', [])   # list of {role, text} dicts
 
     if not message:
         return jsonify({'success': False, 'error': 'Message is required'}), 400
@@ -590,19 +644,33 @@ def chat():
     # ── Try Gemini ───────────────────────────────────────────────────
     if genai_client:
         try:
+            from google.genai import types
+            
             system_prompt = FARMING_SYSTEM_PROMPT.format(language_name=lang_name)
+            
+            # Format history for Chat session
+            history_contents = []
+            for turn in history[-10:]:
+                # Map roles correctly to 'user' or 'model'
+                r = "user" if turn.get('role') == 'user' else "model"
+                history_contents.append(
+                    types.Content(role=r, parts=[types.Part.from_text(text=turn.get('text', ''))])
+                )
 
-            # Build full conversation string with history
-            conversation = system_prompt + "\n\n"
-            for turn in history[-10:]:   # Keep last 10 turns to stay within context
-                role_label = "Farmer" if turn.get('role') == 'user' else "FarmAI"
-                conversation += f"{role_label}: {turn.get('text', '')}\n"
-            conversation += f"Farmer: {message}\nFarmAI:"
-
-            response = genai_client.models.generate_content(
-                model=GEMINI_MODEL, contents=conversation
+            # Initialize chat with Tools enabled
+            chat_session = genai_client.chats.create(
+                model=GEMINI_MODEL,
+                history=history_contents,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    tools=[fetch_live_weather, fetch_mandi_price],
+                    temperature=0.3
+                )
             )
-            reply    = response.text.strip()
+            
+            # Sending message auto-loops tool execution if needed!
+            response = chat_session.send_message(message)
+            reply = response.text.strip()
 
             return jsonify({
                 'success': True,

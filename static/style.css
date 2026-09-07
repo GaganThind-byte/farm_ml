@@ -81,7 +81,7 @@ body {
 .site-header {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     padding: 28px 24px 20px;
     background: var(--white);
     border-bottom: 1px solid var(--slate-100);
@@ -97,6 +97,35 @@ body {
     color: var(--slate-900);
     text-decoration: none;
     letter-spacing: -0.5px;
+}
+
+/* ============================================================
+   GOOGLE TRANSLATE WIDGET OVERRIDES
+   ============================================================ */
+.goog-te-banner-frame.skiptranslate {
+    display: none !important;
+}
+
+body {
+    top: 0px !important;
+}
+
+.goog-te-gadget {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    color: transparent !important;
+    /* Hides the "Powered by Google" text */
+    font-size: 0px;
+}
+
+.goog-te-gadget .goog-te-combo {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    color: var(--slate-700);
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid var(--slate-200);
+    outline: none;
+    cursor: pointer;
 }
 
 .site-logo span:first-child {
@@ -750,6 +779,31 @@ body {
     color: var(--green-700);
     margin-bottom: 20px;
     font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.btn-location {
+    background: var(--green-50);
+    color: var(--green-700);
+    border: 1px solid var(--green-200);
+    border-radius: var(--radius-pill);
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-location:hover {
+    background: var(--green-100);
+    border-color: var(--green-300);
+}
+
+.btn-location:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 /* Form groups */
