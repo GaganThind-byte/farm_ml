@@ -602,40 +602,108 @@
         }
 
         function startVoice() {
+            // First explicitly request mic permission so browser doesn't silently fail
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                addBotMessage('❌ Your browser does not support microphone access. Please use Chrome or Edge.');
+                return;
+            }
+
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(() => _startRecognition())
+                .catch((err) => {
+                    console.error('Mic permission denied:', err);
+                    addBotMessage('❌ Microphone access denied. Please click the 🔒 icon in your browser address bar and allow microphone, then try again.');
+                });
+        }
+
+        function _startRecognition() {
             recognition = new SpeechRecognition();
-            recognition.lang = LANG_VOICE_MAP[currentLang] || 'en-IN';
-            recognition.continuous = false;
+
+            // ⚠️  Chrome Web Speech API only reliably serves en-US.
+            // Other locales (hi-IN, pa-IN etc.) hit "network" error because
+            // Google's servers don't always serve them. Fix: always recognise
+            // in en-US, but Gemini still replies in the user's chosen language.
+            recognition.lang = 'en-US';
+            recognition.continuous = true;
             recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+
+            let finalTranscript = '';
+            let silenceTimer = null;
+
             recognition.onstart = () => {
                 isListening = true;
+                finalTranscript = '';
                 document.getElementById('voiceBtn').classList.add('voice-active');
                 document.getElementById('voiceStatus').classList.remove('hidden');
-                document.getElementById('voiceStatusText').textContent = 'Listening...';
+                document.getElementById('voiceStatusText').textContent = '🎙️ Speak in English (mic active)...';
                 document.getElementById('chatInput').value = '';
+                console.log('Speech recognition started, lang:', recognition.lang);
             };
+
             recognition.onresult = (e) => {
-                let interim = '', final = '';
+                let interim = '';
                 for (let i = e.resultIndex; i < e.results.length; i++) {
-                    if (e.results[i].isFinal) final += e.results[i][0].transcript;
-                    else interim += e.results[i][0].transcript;
+                    const t = e.results[i][0].transcript;
+                    if (e.results[i].isFinal) {
+                        finalTranscript += t + ' ';
+                    } else {
+                        interim += t;
+                    }
                 }
-                document.getElementById('chatInput').value = final || interim;
-                if (final) document.getElementById('voiceStatusText').textContent = '✓ Got it!';
+                const display = (finalTranscript + interim).trim();
+                document.getElementById('chatInput').value = display;
+                document.getElementById('voiceStatusText').textContent = display
+                    ? '✓ Got: "' + display.slice(0, 30) + (display.length > 30 ? '…' : '') + '"'
+                    : '🎙️ Listening...';
+
+                // Auto-stop after 1.5s of silence once we have some text
+                if (finalTranscript.trim()) {
+                    clearTimeout(silenceTimer);
+                    silenceTimer = setTimeout(() => {
+                        if (recognition) recognition.stop();
+                    }, 1500);
+                }
             };
+
             recognition.onend = () => {
+                clearTimeout(silenceTimer);
                 isListening = false;
                 document.getElementById('voiceBtn').classList.remove('voice-active');
                 document.getElementById('voiceStatus').classList.add('hidden');
-                const finalText = document.getElementById('chatInput').value.trim();
-                if (finalText) { document.getElementById('chatInput').value = ''; addUserMessage(finalText); getBotReply(finalText); }
+                const text = (finalTranscript || document.getElementById('chatInput').value).trim();
+                if (text) {
+                    document.getElementById('chatInput').value = '';
+                    addUserMessage(text);
+                    getBotReply(text);
+                }
             };
+
             recognition.onerror = (e) => {
+                clearTimeout(silenceTimer);
                 isListening = false;
                 document.getElementById('voiceBtn').classList.remove('voice-active');
                 document.getElementById('voiceStatus').classList.add('hidden');
-                if (e.error !== 'aborted') addBotMessage('Voice error: ' + e.error + '. Please type instead.');
+                console.error('Speech recognition error:', e.error);
+
+                const ERRORS = {
+                    'no-speech': '🔇 No speech detected. Please speak louder or closer to the mic.',
+                    'audio-capture': '🎤 Microphone not found. Check your mic is plugged in.',
+                    'not-allowed': '🔒 Mic blocked. Click the 🔒 in the address bar → Allow microphone.',
+                    'network': '🌐 Network error with speech API. Try switching to en-US in language.',
+                    'service-not-allowed': '🔒 Speech service blocked. Make sure you are on http://127.0.0.1 (not a file:// URL).',
+                    'aborted': null,   // silent — user manually stopped
+                };
+                const msg = ERRORS[e.error];
+                if (msg) addBotMessage(msg);
             };
-            recognition.start();
+
+            try {
+                recognition.start();
+            } catch (err) {
+                console.error('Could not start recognition:', err);
+                addBotMessage('❌ Could not start voice recognition: ' + err.message);
+            }
         }
 
         function stopVoice() {

@@ -337,25 +337,32 @@ def predict_cow_disease():
 
 
 # ── Helpers ──────────────────────────────────────────────────────────
-def parse_disease_name(raw: str) -> tuple[str, str]:
+def parse_disease_name(raw: str, disease_type: str = 'plant') -> tuple[str, str]:
     """
     Convert model class names to human-readable form.
     'Tomato___Late_blight'  -> plant='Tomato', disease='Late Blight'
-    'Apple___healthy'       -> plant='Apple',  disease='Healthy'
+    'Grape - Black Rot'     -> plant='Grape',  disease='Black Rot'
     'foot-and-mouth'        -> plant='Cow',    disease='Foot And Mouth'
     """
+    if disease_type == 'cow':
+        return 'Cow', raw.replace('-', ' ').replace('_', ' ').title()
+
     if '___' in raw:
         parts   = raw.split('___', 1)
         plant   = parts[0].replace('_', ' ').strip()
         disease = parts[1].replace('_', ' ').strip().title()
+    elif ' - ' in raw:
+        parts   = raw.split(' - ', 1)
+        plant   = parts[0].strip()
+        disease = parts[1].strip()
     else:
-        plant   = 'Cow'
+        plant   = 'Plant'
         disease = raw.replace('-', ' ').replace('_', ' ').title()
     return plant, disease
 
 
 def build_gemini_prompt(disease_type: str, raw_name: str) -> str:
-    plant, disease = parse_disease_name(raw_name)
+    plant, disease = parse_disease_name(raw_name, disease_type)
     readable = f"{plant} — {disease}" if disease_type == 'plant' else disease
 
     if disease_type == 'cow':
@@ -440,7 +447,7 @@ COW_FALLBACK = {
 def make_plant_advice(raw_name):
     """Build a plant advice dict from the knowledge base entry."""
     entry = PLANT_FALLBACK.get(raw_name)
-    _, disease = parse_disease_name(raw_name)
+    _, disease = parse_disease_name(raw_name, 'plant')
 
     if entry is None:
         # Not in KB at all — build from parsed name
@@ -478,7 +485,7 @@ def make_cow_advice(raw_name):
     """Build a cow advice dict from the knowledge base entry."""
     entry = COW_FALLBACK.get(raw_name)
     if entry is None:
-        _, disease = parse_disease_name(raw_name)
+        _, disease = parse_disease_name(raw_name, 'cow')
         return {
             'urgency': 'High',
             'medicines': [{'name': 'Consult veterinarian for specific prescription', 'type': 'other', 'dosage': 'As prescribed', 'route': 'As prescribed'}],
